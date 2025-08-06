@@ -3,7 +3,6 @@ import {
   SidebarItem,
   SidebarItemGroup,
   SidebarItems,
-  SidebarLogo,
 } from "flowbite-react";
 import { useEffect, useState } from "react";
 import {
@@ -32,7 +31,7 @@ const SidebarContent = ({ showLabels }) => {
               href="/"
               icon={HiHome}
               data-active={pathName === "/"}
-              className="hover:bg-violet-400 focus:bg-violet-500 data-[active=true]:bg-violet-700 data-[active=true]:text-white rounded-md mb-2.5 "
+              className="hover:bg-violet-400 focus:bg-violet-500 data-[active=true]:bg-violet-700 data-[active=true]:text-white rounded-md mb-2.5 p-1.5"
             >
               {showLabels && "Home"}
             </SidebarItem>
@@ -40,14 +39,14 @@ const SidebarContent = ({ showLabels }) => {
               href="/users-list"
               icon={HiUsers}
                 data-active={pathName === "/users-list"}
-              className="hover:bg-violet-400 focus:bg-violet-500 data-[active=true]:bg-violet-700 data-[active=true]:text-white rounded-md mb-2.5"
+              className="hover:bg-violet-400 focus:bg-violet-500 data-[active=true]:bg-violet-700 data-[active=true]:text-white rounded-md mb-2.5 p-1.5"
             >
               {showLabels && "Users"}
             </SidebarItem>
             <SidebarItem
               href=""
               icon={HiShoppingBag}
-              className="hover:bg-violet-400 focus:bg-violet-500 data-[active=true]:bg-violet-700 data-[active=true]:text-white rounded-md mb-2.5"
+              className="hover:bg-violet-400 focus:bg-violet-500 data-[active=true]:bg-violet-700 data-[active=true]:text-white rounded-md mb-2.5 p-1.5"
             >
               {showLabels && "Products"}
             </SidebarItem>
