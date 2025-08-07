@@ -2,6 +2,7 @@ import { useContext } from "react";
 import { userContext } from "../../Context/UserContextProvider";
 import { ImSpinner3 } from "react-icons/im";
 import {
+  Button,
   Table,
   TableBody,
   TableCell,
@@ -10,6 +11,7 @@ import {
   TableRow,
 } from "flowbite-react";
 import { Pagination } from "flowbite-react";
+import { HiEye } from "react-icons/hi";
 
 const Users = () => {
   const { isLoading, currentPage, setCurrentPage, currentUsers, totalPages } =
@@ -20,6 +22,11 @@ const Users = () => {
   return (
     <div className="flex-1 p-4 transition-all duration-300  lg:ml-64 ml-20 mt-5">
       <h1 className="text-3xl font-bold mb-10">users list :</h1>
+
+      {/* add user button  */}
+      <Button className="bg-gradient-to-r from-cyan-500 to-blue-500 text-white hover:bg-gradient-to-bl focus:ring-cyan-300 dark:focus:ring-cyan-800 mb-5 ml-8 md:ml-auto  !px-5 text-[20px]">
+        Add User 
+      </Button>
       {isLoading ? (
         <ImSpinner3 className="text-violet-600 size-16 mx-auto transition-all animate-spin delay-200 mb-10" />
       ) : null}
@@ -44,7 +51,7 @@ const Users = () => {
               Role
             </TableHeadCell>
             <TableHeadCell>
-              <span className="sr-only">Edit</span>
+             
             </TableHeadCell>
           </TableHead>
 
@@ -58,12 +65,13 @@ const Users = () => {
                   <TableCell>{user.email}</TableCell>
                   <TableCell>{user.phone}</TableCell>
                   <TableCell>{user.gender}</TableCell>
+                    <TableCell>{user.role}</TableCell>
                   <TableCell>
                     <a
                       href="#"
-                      className="font-medium  text-primary-600 hover:underline "
+                      className="font-medium text-cyan-500 hover:underline "
                     >
-                      Edit
+                     <HiEye />
                     </a>
                   </TableCell>
                 </TableRow>
