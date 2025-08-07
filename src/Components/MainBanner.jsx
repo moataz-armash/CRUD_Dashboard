@@ -1,5 +1,5 @@
 import { Banner, BannerCollapseButton, Label, TextInput } from "flowbite-react";
-import { BiSearch } from "react-icons/bi";
+
 
 
 const MainBanner = () => {

@@ -1,21 +1,22 @@
+import { Outlet } from "react-router-dom";
+import NavigationSidebar from "../Components/NavigationSidebar";
+import MainBanner from "../Components/MainBanner.jsx";
+import { UserContextProvider } from "../Context/UserContextProvider.jsx";
 
-import { Outlet } from 'react-router-dom'
-import NavigationSidebar from '../Components/NavigationSidebar'
-import MainBanner from '../Components/MainBanner.jsx'
 
 const Layout = () => {
   return (
     <>
-     <MainBanner/>
-    <div className='flex gap-10'>
-     
-       <NavigationSidebar/>
-    
-      <Outlet/>
-    </div>
-    
-    </>
-  )
-}
+  <UserContextProvider>
+     <MainBanner />
+        <div className="flex gap-10">
+          <NavigationSidebar />
 
-export default Layout
+          <Outlet />
+        </div>
+  </UserContextProvider>
+    </>
+  );
+};
+
+export default Layout;

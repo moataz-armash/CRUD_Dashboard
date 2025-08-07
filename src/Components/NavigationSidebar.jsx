@@ -16,14 +16,21 @@ import { useLocation } from "react-router-dom";
 const SidebarContent = ({ showLabels }) => {
   const location = useLocation();
   const pathName = location.pathname;
+
   return (
     <Sidebar
       aria-label="Sidebar navigation"
-      className="h-screen w-20 lg:w-64 fixed top-0 left-0 shadow-md bg-white z-50 p-6"
+      className={`h-screen fixed top-0 left-0 shadow-md bg-white z-50 p-4 
+        ${showLabels ? "w-64" : "w-20"} 
+        transition-all duration-300`}
     >
-      <h1 className="hidden md:block  my-5 font-bold text-2xl">
-        CRUD DASHBORD
-      </h1>
+      {/* العنوان يظهر فقط في الشاشات الكبيرة */}
+      {showLabels && (
+        <h1 className="my-5 font-bold text-xl whitespace-nowrap">
+          CRUD DASHBOARD
+        </h1>
+      )}
+
       <div className="flex h-full flex-col justify-between py-2">
         <SidebarItems>
           <SidebarItemGroup>
@@ -31,26 +38,33 @@ const SidebarContent = ({ showLabels }) => {
               href="/"
               icon={HiHome}
               data-active={pathName === "/"}
-              className="hover:bg-violet-400 focus:bg-violet-500 data-[active=true]:bg-violet-700 data-[active=true]:text-white rounded-md mb-2.5 p-1.5"
+              className="hover:bg-violet-400 focus:bg-violet-500 data-[active=true]:bg-violet-700 data-[active=true]:text-white rounded-md mb-2.5 p-2"
             >
               {showLabels && "Home"}
             </SidebarItem>
+
             <SidebarItem
               href="/users-list"
               icon={HiUsers}
-                data-active={pathName === "/users-list"}
-              className="hover:bg-violet-400 focus:bg-violet-500 data-[active=true]:bg-violet-700 data-[active=true]:text-white rounded-md mb-2.5 p-1.5"
+              data-active={pathName === "/users-list"}
+              className="hover:bg-violet-400 focus:bg-violet-500 data-[active=true]:bg-violet-700 data-[active=true]:text-white rounded-md mb-2.5 p-2"
             >
               {showLabels && "Users"}
             </SidebarItem>
+
             <SidebarItem
               href=""
               icon={HiShoppingBag}
-              className="hover:bg-violet-400 focus:bg-violet-500 data-[active=true]:bg-violet-700 data-[active=true]:text-white rounded-md mb-2.5 p-1.5"
+              className="hover:bg-violet-400 focus:bg-violet-500 data-[active=true]:bg-violet-700 data-[active=true]:text-white rounded-md mb-2.5 p-2"
             >
               {showLabels && "Products"}
             </SidebarItem>
-            <SidebarItem href="" icon={HiOutlineLogout}>
+
+            <SidebarItem
+              href=""
+              icon={HiOutlineLogout}
+              className="hover:bg-violet-400 focus:bg-violet-500 data-[active=true]:bg-violet-700 data-[active=true]:text-white rounded-md mb-2.5 p-2"
+            >
               {showLabels && "Logout"}
             </SidebarItem>
           </SidebarItemGroup>
@@ -63,25 +77,20 @@ const SidebarContent = ({ showLabels }) => {
 const NavigationSidebar = () => {
   const [showLabels, setShowLabels] = useState(true);
 
-  // Check screen width on load and resize
+  // التحقق من حجم الشاشة عند التحميل والتغيير
   useEffect(() => {
     const handleResize = () => {
-      if (window.innerWidth >= 1024) {
-        setShowLabels(true); // lg and up
-      } else {
-        setShowLabels(false); // md and below
-      }
+      setShowLabels(window.innerWidth >= 1024); // lg breakpoint
     };
 
-    handleResize(); // run on load
-    window.addEventListener("resize", handleResize); // run on resize
+    handleResize(); // عند أول تحميل
+    window.addEventListener("resize", handleResize);
 
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
   return (
     <div className="flex min-h-screen">
-      {/* Sidebar (always fixed) */}
       <SidebarContent showLabels={showLabels} />
     </div>
   );
