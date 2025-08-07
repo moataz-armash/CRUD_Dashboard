@@ -34,7 +34,7 @@ const cardContent=[
 const Home = () => {
   return (
     <>
-      <div className="grid grid-cols-1 gap-3.5 md:gap-5 md:grid-cols-2 lg:grid-cols-4 transition-all duration-300  lg:ml-64 placement-center  mt-10">
+      <div className="grid grid-cols-1 gap-3.5 md:gap-5 md:grid-cols-2 lg:grid-cols-4 transition-all duration-300 ml-16 lg:ml-64  justify-items-center  mt-10">
         {
           cardContent.map((card) => {
             return <Card key={card.name} href={card.href} className="w-3xs h-40 rounded-md bg-gray-100  border-2 border-violet-700 shadow-gray-500 hover:scale-105 transition-all">
