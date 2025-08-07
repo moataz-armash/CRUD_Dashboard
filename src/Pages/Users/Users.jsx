@@ -12,6 +12,8 @@ import {
 } from "flowbite-react";
 import { Pagination } from "flowbite-react";
 import { HiEye } from "react-icons/hi";
+import { MdModeEditOutline } from "react-icons/md";
+import { RiDeleteBin6Line } from "react-icons/ri";
 
 const Users = () => {
   const { isLoading, currentPage, setCurrentPage, currentUsers, totalPages } =
@@ -66,12 +68,27 @@ const Users = () => {
                   <TableCell>{user.phone}</TableCell>
                   <TableCell>{user.gender}</TableCell>
                     <TableCell>{user.role}</TableCell>
-                  <TableCell>
+                  <TableCell className="flex gap-2.5">
                     <a
                       href="#"
                       className="font-medium text-cyan-500 hover:underline "
                     >
                      <HiEye />
+                     
+                    </a>
+                     <a
+                      href="#"
+                      className="font-medium text-cyan-500 hover:underline "
+                    >
+                     <MdModeEditOutline />
+                     
+                    </a>
+                       <a
+                      href="#"
+                      className="font-medium text-cyan-500 hover:underline "
+                    >
+                   <RiDeleteBin6Line />
+                     
                     </a>
                   </TableCell>
                 </TableRow>
