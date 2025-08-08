@@ -51,7 +51,7 @@ import {
 
 
   return (
-    <userContext.Provider value={{ isLoading , currentPage,setCurrentPage ,currentUsers,totalPages }}>
+    <userContext.Provider value={{ isLoading , currentPage,setCurrentPage ,currentUsers,totalPages,users }}>
       {children }
     </userContext.Provider>
   );

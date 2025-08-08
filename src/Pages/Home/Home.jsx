@@ -5,11 +5,16 @@ import { HiMiniUserCircle } from "react-icons/hi2";
 import { MdOutlineAdminPanelSettings } from "react-icons/md";
 import { AiFillProduct } from "react-icons/ai"
 import { href } from "react-router-dom";
-const cardContent=[
+import { useContext } from "react";
+import { userContext } from "../../Context/UserContextProvider";
+
+const Home = () => {
+    const{users} =useContext(userContext)
+  const cardContent=[
   {
     "icon":HiUsers,
     "name":"Users",
-    "number":20,
+    "number":users.length,
     "href":'/users-list'
   },
    {
@@ -31,7 +36,7 @@ const cardContent=[
     "href":''
   }
 ]
-const Home = () => {
+
   return (
     <>
       <div className="grid grid-cols-1 gap-3.5 md:gap-5 md:grid-cols-2 lg:grid-cols-4 transition-all duration-300 ml-16 lg:ml-64  justify-items-center  mt-10">

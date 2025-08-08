@@ -1,8 +1,9 @@
-import { useContext } from "react";
+import { useContext, useState } from "react";
 import { userContext } from "../../Context/UserContextProvider";
 import { ImSpinner3 } from "react-icons/im";
 import {
   Button,
+  Modal,
   Table,
   TableBody,
   TableCell,
@@ -18,8 +19,18 @@ import { RiDeleteBin6Line } from "react-icons/ri";
 const Users = () => {
   const { isLoading, currentPage, setCurrentPage, currentUsers, totalPages } =
     useContext(userContext);
+  const [selectedUser, setSelectedUser]=useState(null);
+  const[openModel, setOpenModel] =useState(false);
+
   const onPageChange = (page) => setCurrentPage(page);
   console.log(totalPages);
+
+  const handelViewUser = (user)=>{
+   setSelectedUser(user);
+   setOpenModel(true);
+   console.log(selectedUser);
+   
+  }
 
   return (
     <div className="flex-1 p-4 transition-all duration-300  lg:ml-64 ml-20 mt-5">
@@ -32,7 +43,8 @@ const Users = () => {
       {isLoading ? (
         <ImSpinner3 className="text-violet-600 size-16 mx-auto transition-all animate-spin delay-200 mb-10" />
       ) : null}
-
+       
+       {/* users list table  */}
       <div className="overflow-x-auto">
         <Table striped>
           <TableHead className="mb-10">
@@ -69,27 +81,20 @@ const Users = () => {
                   <TableCell>{user.gender}</TableCell>
                     <TableCell>{user.role}</TableCell>
                   <TableCell className="flex gap-2.5">
-                    <a
-                      href="#"
-                      className="font-medium text-cyan-500 hover:underline "
-                    >
-                     <HiEye />
-                     
-                    </a>
-                     <a
-                      href="#"
-                      className="font-medium text-cyan-500 hover:underline "
-                    >
-                     <MdModeEditOutline />
-                     
-                    </a>
-                       <a
-                      href="#"
-                      className="font-medium text-cyan-500 hover:underline "
-                    >
-                   <RiDeleteBin6Line />
-                     
-                    </a>
+                     <button
+                    onClick={() => handelViewUser(user)}
+                    className="text-cyan-500 hover:underline cursor-pointer"
+                  >
+                    <HiEye />
+                  </button>
+
+                  <button className="text-green-500 hover:underline cursor-pointer">
+                    <MdModeEditOutline />
+                  </button>
+
+                  <button className="text-red-500 hover:underline cursor-pointer">
+                    <RiDeleteBin6Line />
+                  </button>
                   </TableCell>
                 </TableRow>
               );
@@ -104,6 +109,7 @@ const Users = () => {
             showIcons
           />
         </div>
+         
       </div>
     </div>
   );
