@@ -54,15 +54,19 @@ const Users = () => {
 
   // فتح نموذج التعديل
   const handleEditUser = (user) => {
-    setEditedUser({...user});
+    setEditedUser({...user, id: user.id || user.user_id});
     setOpenEditModal(true);
   };
 
   // حفظ التعديلات
   const handleSaveEdit = async () => {
     try {
-      await updateUser(editedUser);
-      setOpenEditModal(false);
+      if (editedUser.id) { 
+        await updateUser(editedUser);
+        setOpenEditModal(false);
+      } else {
+        console.error("Error: editedUser.id is undefined. This might be an add operation.", editedUser);
+      }
     } catch (error) {
       console.error("Error updating user:", error);
     }
@@ -71,8 +75,12 @@ const Users = () => {
   // تأكيد الحذف
   const handleConfirmDelete = async () => {
     try {
-      await deleteUser(selectedUser.id);
-      setOpenDeleteModal(false);
+      if (selectedUser && selectedUser.id) {
+        await deleteUser(selectedUser.id);
+        setOpenDeleteModal(false);
+      } else {
+        console.error("Error: selectedUser or selectedUser.id is undefined.", selectedUser);
+      }
     } catch (error) {
       console.error("Error deleting user:", error);
     }
@@ -321,3 +329,4 @@ const Users = () => {
 };
 
 export default Users;
+

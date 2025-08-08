@@ -28,7 +28,7 @@ export const UserContextProvider = ({ children }) => {
         "https://cpvsiaaboyncpcyfahkm.supabase.co/rest/v1/users",
         { headers }
       );
-      setUsers(res.data);
+      setUsers(res.data.map(user => ({ ...user, id: user.user_id || user.id })));
     } catch (err) {
       console.error("Error fetching users:", err.response?.data || err.message);
       setError("Failed to fetch users");
@@ -64,15 +64,28 @@ export const UserContextProvider = ({ children }) => {
   const updateUser = async (userData) => {
     try {
       setIsLoading(true);
+      const userIdToUse = userData.id || userData.user_id;
+      if (!userIdToUse) {
+        throw new Error("User ID is missing for update operation.");
+      }
+      const dataToSend = { ...userData };
+      if (userData.user_id) {
+        dataToSend.user_id = userData.user_id;
+        delete dataToSend.id;
+      } else if (userData.id) {
+        dataToSend.user_id = userData.id;
+        delete dataToSend.id;
+      }
+
       const res = await axios.patch(
-        `https://cpvsiaaboyncpcyfahkm.supabase.co/rest/v1/users?id=eq.${userData.id}`,
-        userData,
+        `https://cpvsiaaboyncpcyfahkm.supabase.co/rest/v1/users?user_id=eq.${userIdToUse}`,
+        dataToSend,
         { headers }
       );
       
       setUsers(prev => 
         prev.map(user => 
-          user.id === userData.id ? { ...user, ...userData } : user
+          (user.id || user.user_id) === userIdToUse ? { ...user, ...userData, id: userIdToUse } : user
         )
       );
       return { success: true };
@@ -88,11 +101,15 @@ export const UserContextProvider = ({ children }) => {
   const deleteUser = async (userId) => {
     try {
       setIsLoading(true);
+      const userIdToUse = userId.id || userId.user_id || userId; // يمكن أن يكون userId كائن أو مجرد id
+      if (!userIdToUse) {
+        throw new Error("User ID is missing for delete operation.");
+      }
       await axios.delete(
-        `https://cpvsiaaboyncpcyfahkm.supabase.co/rest/v1/users?id=eq.${userId}`,
+        `https://cpvsiaaboyncpcyfahkm.supabase.co/rest/v1/users?user_id=eq.${userIdToUse}`,
         { headers }
       );
-      setUsers(prev => prev.filter(user => user.id !== userId));
+      setUsers(prev => prev.filter(user => (user.id || user.user_id) !== userIdToUse));
       return { success: true };
     } catch (err) {
       console.error("Error deleting user:", err.response?.data || err.message);
