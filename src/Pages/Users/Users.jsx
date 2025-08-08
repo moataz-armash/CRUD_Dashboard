@@ -280,10 +280,10 @@ const Users = () => {
                 </Select>
               </div>
               <div className="flex justify-end gap-3 mt-4">
-                <Button color="gray" onClick={() => setOpenEditModal(false)}>
+                <Button  style={{ cursor: 'pointer' }} color="gray" onClick={() => setOpenEditModal(false)}>
                   Cancel
                 </Button>
-                <Button onClick={handleSaveEdit}>
+                <Button  style={{ cursor: 'pointer' }} onClick={handleSaveEdit}>
                   Save
                 </Button>
               </div>
@@ -305,10 +305,10 @@ const Users = () => {
                 Are you sure you want to delete this user?
               </h3>
               <div className="flex justify-center gap-4">
-                <Button color="gray" onClick={() => setOpenDeleteModal(false)}>
+                <Button  style={{ cursor: 'pointer' }} color="gray" onClick={() => setOpenDeleteModal(false)}>
                   No, cancel
                 </Button>
-                <Button color="failure" onClick={handleConfirmDelete}>
+                <Button style={{ cursor: 'pointer' }} color="failure" onClick={handleConfirmDelete}>
                   Yes, I'm sure
                 </Button>
               </div>
