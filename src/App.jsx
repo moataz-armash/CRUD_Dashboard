@@ -1,3 +1,12 @@
+
+import { useState } from 'react'
+import reactLogo from './assets/react.svg'
+import viteLogo from '/vite.svg'
+import './App.css'
+
+import Register from './Components/Register/Register'
+import Login from './Components/Login/Login'
+
 import { lazy } from "react";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import Layout from "./Layout/Layout";
@@ -21,7 +30,12 @@ function App() {
 
   return (
     <>
+
+     <Register/>
+     <Login/>
+
       <RouterProvider router={routes} />
+
     </>
   );
 }
