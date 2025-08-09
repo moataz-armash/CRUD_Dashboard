@@ -16,22 +16,49 @@ export const UserContextProvider = ({ children }) => {
     "Content-Type": "application/json",
     "apikey": apikey,
     "Authorization": `Bearer ${apikey}`,
-    "Prefer": "return=representation" // للحصول على البيانات المحدثة بعد العمليات
+    "Prefer": "return=representation"
   };
 
-  // جلب المستخدمين
+  // جلب المستخدمين مع دعم localStorage
   const fetchUsers = useCallback(async () => {
     try {
       setIsLoading(true);
       setError(null);
+      
+      // التحقق من وجود بيانات في localStorage
+      const cachedUsers = localStorage.getItem('cachedUsers');
+      const lastFetchTime = localStorage.getItem('lastFetchTime');
+      
+      // إذا كانت البيانات موجودة ولم تنته صلاحيتها (مثال: 5 دقائق)
+      if (cachedUsers && lastFetchTime && (Date.now() - parseInt(lastFetchTime)) < 300000) {
+        setUsers(JSON.parse(cachedUsers));
+        setIsLoading(false);
+        return;
+      }
+      
+      // جلب البيانات من الخادم
       const res = await axios.get(
         "https://cpvsiaaboyncpcyfahkm.supabase.co/rest/v1/users",
         { headers }
       );
-      setUsers(res.data.map(user => ({ ...user, id: user.user_id || user.id })));
+      
+      const formattedUsers = res.data.map(user => ({ ...user, id: user.user_id || user.id }));
+      setUsers(formattedUsers);
+      
+      // حفظ البيانات في localStorage
+      localStorage.setItem('cachedUsers', JSON.stringify(formattedUsers));
+      localStorage.setItem('lastFetchTime', Date.now().toString());
+      
     } catch (err) {
       console.error("Error fetching users:", err.response?.data || err.message);
       setError("Failed to fetch users");
+      
+      // محاولة استخدام البيانات المخزنة محليًا في حالة فشل الاتصال
+      const cachedUsers = localStorage.getItem('cachedUsers');
+      if (cachedUsers) {
+        setUsers(JSON.parse(cachedUsers));
+        setError("Using cached data - connection issue");
+      }
     } finally {
       setIsLoading(false);
     }
@@ -41,7 +68,7 @@ export const UserContextProvider = ({ children }) => {
     fetchUsers();
   }, [fetchUsers]);
 
-  // إضافة مستخدم جديد
+  // إضافة مستخدم جديد مع تحديث localStorage
   const addUser = async (userData) => {
     try {
       setIsLoading(true);
@@ -50,7 +77,15 @@ export const UserContextProvider = ({ children }) => {
         userData,
         { headers }
       );
-      setUsers(prev => [...prev, res.data[0]]);
+      
+      const newUser = res.data[0];
+      setUsers(prev => {
+        const updatedUsers = [...prev, newUser];
+        localStorage.setItem('cachedUsers', JSON.stringify(updatedUsers));
+        localStorage.setItem('lastFetchTime', Date.now().toString());
+        return updatedUsers;
+      });
+      
       return { success: true };
     } catch (err) {
       console.error("Error adding user:", err.response?.data || err.message);
@@ -60,7 +95,7 @@ export const UserContextProvider = ({ children }) => {
     }
   };
 
-  // تحديث مستخدم
+  // تحديث مستخدم مع تحديث localStorage
   const updateUser = async (userData) => {
     try {
       setIsLoading(true);
@@ -68,6 +103,7 @@ export const UserContextProvider = ({ children }) => {
       if (!userIdToUse) {
         throw new Error("User ID is missing for update operation.");
       }
+      
       const dataToSend = { ...userData };
       if (userData.user_id) {
         dataToSend.user_id = userData.user_id;
@@ -83,11 +119,15 @@ export const UserContextProvider = ({ children }) => {
         { headers }
       );
       
-      setUsers(prev => 
-        prev.map(user => 
+      setUsers(prev => {
+        const updatedUsers = prev.map(user => 
           (user.id || user.user_id) === userIdToUse ? { ...user, ...userData, id: userIdToUse } : user
-        )
-      );
+        );
+        localStorage.setItem('cachedUsers', JSON.stringify(updatedUsers));
+        localStorage.setItem('lastFetchTime', Date.now().toString());
+        return updatedUsers;
+      });
+      
       return { success: true };
     } catch (err) {
       console.error("Error updating user:", err.response?.data || err.message);
@@ -97,19 +137,27 @@ export const UserContextProvider = ({ children }) => {
     }
   };
 
-  // حذف مستخدم
+  // حذف مستخدم مع تحديث localStorage
   const deleteUser = async (userId) => {
     try {
       setIsLoading(true);
-      const userIdToUse = userId.id || userId.user_id || userId; // يمكن أن يكون userId كائن أو مجرد id
+      const userIdToUse = userId.id || userId.user_id || userId;
       if (!userIdToUse) {
         throw new Error("User ID is missing for delete operation.");
       }
+      
       await axios.delete(
         `https://cpvsiaaboyncpcyfahkm.supabase.co/rest/v1/users?user_id=eq.${userIdToUse}`,
         { headers }
       );
-      setUsers(prev => prev.filter(user => (user.id || user.user_id) !== userIdToUse));
+      
+      setUsers(prev => {
+        const updatedUsers = prev.filter(user => (user.id || user.user_id) !== userIdToUse);
+        localStorage.setItem('cachedUsers', JSON.stringify(updatedUsers));
+        localStorage.setItem('lastFetchTime', Date.now().toString());
+        return updatedUsers;
+      });
+      
       return { success: true };
     } catch (err) {
       console.error("Error deleting user:", err.response?.data || err.message);
@@ -138,7 +186,7 @@ export const UserContextProvider = ({ children }) => {
         addUser,
         updateUser,
         deleteUser,
-        fetchUsers // في حال أردنا إعادة جلب البيانات يدوياً
+        fetchUsers
       }}
     >
       {children}
