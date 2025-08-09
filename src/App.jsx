@@ -9,6 +9,8 @@ const NotFound = lazy(() => import("./Pages/NotFound"));
 
 function App() {
   const routes = createBrowserRouter([
+    {path: "/login", element: <Login />},
+    {path: "/register", element: <Register />},
     {
       path: "/",
       element:<Layout/>,
