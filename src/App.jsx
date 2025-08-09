@@ -2,19 +2,18 @@ import { lazy } from "react";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import Layout from "./Layout/Layout";
 
-
 const Home = lazy(() => import("./Pages/Home/Home"));
-const Users= lazy(() => import("./Pages/Users/Users"));
+const Users = lazy(() => import("./Pages/Users/Users"));
 const NotFound = lazy(() => import("./Pages/NotFound"));
 
 function App() {
   const routes = createBrowserRouter([
     {
       path: "/",
-      element:<Layout/>,
+      element: <Layout />,
       children: [
         { index: true, element: <Home /> },
-        {path:'/users-list', element:<Users/>},
+        { path: "/users-list", element: <Users /> },
         { path: "*", element: <NotFound /> },
       ],
     },
