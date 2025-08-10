@@ -1,7 +1,6 @@
-import { AuthContext } from '../../Context/AuthContext';
 
 const Login = () => {
-    const { login} = useContext(AuthContext);
+   
     return (
         <div className="h-screen flex items-center justify-center bg-blue-700 ">
             <div className="w-100 bg-white rounded-lg shadow-lg p-6">
