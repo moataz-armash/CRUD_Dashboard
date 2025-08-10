@@ -1,5 +1,6 @@
 import axios from "axios";
-import { createContext, useCallback, useEffect, useState } from "react";
+import { createContext, useCallback, useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 
 export const userContext = createContext();
 
@@ -9,6 +10,10 @@ export const UserContextProvider = ({ children }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
   const pageSize = 10;
+
+  // get filter type from url in home page for customer & admin
+  const [searchParams]= useSearchParams();
+  const filterType = searchParams.get('filter')
 
   const apikey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNwdnNpYWFib3luY3BjeWZhaGttIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQyNTYzOTgsImV4cCI6MjA2OTgzMjM5OH0.96oz-V_0CVvYaNq9TgPVV3rfmkrvNSB_6WQ2KyUAnWA";
 
@@ -67,6 +72,54 @@ export const UserContextProvider = ({ children }) => {
   useEffect(() => {
     fetchUsers();
   }, [fetchUsers]);
+
+
+   
+  // filtering users
+  const filteredUsers = useMemo(() => {
+    if (!filterType) return users;
+    const ft = filterType.toLowerCase();
+    if (ft === "customer") {
+      return users.filter(u => u.role?.toLowerCase().includes("customer"));
+    }
+    if (ft === "admin") {
+      return users.filter(u => u.role?.toLowerCase().includes("admin"));
+    }
+    return users;
+  }, [filterType, users]);
+
+  // 2) compute total pages according to filteredUsers
+  const totalPages = useMemo(() => {
+    return Math.max(1, Math.ceil(filteredUsers.length / pageSize));
+  }, [filteredUsers.length, pageSize]);
+
+  //  reset current page when filter or users change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filterType, users.length]);
+
+  // ensure currentPage never exceeds totalPages 
+  useEffect(() => {
+    if (currentPage > totalPages) setCurrentPage(totalPages);
+  }, [currentPage, totalPages]);
+
+  //  slice (pagination) على filteredUsers
+  const startIndex = (currentPage - 1) * pageSize;
+  const currentUsers = useMemo(() => {
+    return filteredUsers.slice(startIndex, startIndex + pageSize);
+  }, [filteredUsers, startIndex, pageSize]);
+
+// compute number of customers and admins
+const customersCount = useMemo(() => {
+  return users.filter((user) => user.role?.toLowerCase().includes("customer")).length;
+}, [users]);
+
+const adminsCount = useMemo(() => {
+  return users.filter((user) => user.role?.toLowerCase().includes("admin")).length;
+}, [users]);
+
+
+
 
   // إضافة مستخدم جديد مع تحديث localStorage
   const addUser = async (userData) => {
@@ -157,6 +210,8 @@ export const UserContextProvider = ({ children }) => {
         localStorage.setItem('lastFetchTime', Date.now().toString());
         return updatedUsers;
       });
+        // تحديث القائمة من السيرفر مباشرة لتجنب أي بيانات قديمة
+    await fetchUsers();
       
       return { success: true };
     } catch (err) {
@@ -167,11 +222,7 @@ export const UserContextProvider = ({ children }) => {
     }
   };
 
-  // حساب البيانات للعرض الصفحي
-  const startIndex = (currentPage - 1) * pageSize;
-  const endIndex = startIndex + pageSize;
-  const currentUsers = users.slice(startIndex, endIndex);
-  const totalPages = Math.max(1, Math.ceil(users.length / pageSize));
+  
 
   return (
     <userContext.Provider 
@@ -186,7 +237,10 @@ export const UserContextProvider = ({ children }) => {
         addUser,
         updateUser,
         deleteUser,
-        fetchUsers
+        fetchUsers,
+        filteredUsers,
+        customersCount,
+        adminsCount
       }}
     >
       {children}

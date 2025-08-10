@@ -29,7 +29,8 @@ const Users = () => {
     currentUsers, 
     totalPages,
     deleteUser,
-    updateUser 
+    updateUser,
+    filteredUsers
   } = useContext(userContext);
   
   const [selectedUser, setSelectedUser] = useState(null);
@@ -44,6 +45,8 @@ const Users = () => {
     role: ''
   });
 
+  console.log(filteredUsers);
+  
   const onPageChange = (page) => setCurrentPage(page);
 
   // عرض بيانات المستخدم
@@ -134,7 +137,7 @@ const Users = () => {
           </TableHead>
 
           <TableBody className="divide-y">
-            {currentUsers.map((user) => (
+            {currentUsers?.map((user) => (
               <TableRow key={user.id} className="bg-white">
                 <TableCell className="whitespace-nowrap font-medium">
                   {user.name}
@@ -284,14 +287,14 @@ const Users = () => {
                 >
                   <option value="">Select Role</option>
                   <option value="Admin">Admin</option>
-                  <option value="User">User</option>
+                  <option value="User">Customer</option>
                 </Select>
               </div>
               <div className="flex justify-end gap-3 mt-4">
                 <Button  style={{ cursor: 'pointer' }} color="gray" onClick={() => setOpenEditModal(false)}>
                   Cancel
                 </Button>
-                <Button  style={{ cursor: 'pointer' }} onClick={handleSaveEdit}>
+                <Button  style={{ cursor: 'pointer' }} color="purple" onClick={handleSaveEdit}>
                   Save
                 </Button>
               </div>
@@ -316,7 +319,7 @@ const Users = () => {
                 <Button  style={{ cursor: 'pointer' }} color="gray" onClick={() => setOpenDeleteModal(false)}>
                   No, cancel
                 </Button>
-                <Button style={{ cursor: 'pointer' }} color="failure" onClick={handleConfirmDelete}>
+                <Button style={{ cursor: 'pointer' }} color="red" onClick={handleConfirmDelete}>
                   Yes, I'm sure
                 </Button>
               </div>
