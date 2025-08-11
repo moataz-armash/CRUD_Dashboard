@@ -1,40 +1,52 @@
-import axios from "axios";
-import { createContext } from "react";
-import { useNavigate } from "react-router-dom";
+import { createContext,useEffect,useState,useContext, Children } from "react";
+import { supabase } from "../Components/Supabase/Supabase";
 
+const AuthContext = createContext();
+export const AuthContextProvider= ({children})=>{
+    const [session, setSession] = useState(undefined);
 
-export const AuthContext = createContext();
-
-export const AuthProvider = ({ children }) => {
-    const navigate = useNavigate();
-
-    const login = async () => {
+    const SignIn =async({email,password})=>{
         try {
-            let response = await axios.post("https://cpvsiaaboyncpcyfahkm.supabase.com/auth/v1/token?grant_type=password");
-            console.log(response);
-         
-            navigate("/");
+            const { data, error } = await supabase.auth.signInWithPassword({
+                email: email,
+                password: password,
+            })
+            if (error) {
+                console.error("Error signing in:", error);
+                return { success: false, error };
+            }
+            console.log("signed in successfully:", data);
+            return { success: true, data };
         } catch (error) {
-            console.error(error);
-       
+            console.error("Error signing in:", error);
         }
-    };
+    }
 
-    const register = async () => {
-        try {
-            let response = await axios.post("https://cpvsiaaboyncpcyfahkm.supabase.com/auth/v1/signup");
-            console.log(response);
-        
-            navigate("/login");
-        } catch (error) {
-            console.error(error);
-           
+    const Register =async(email,password) =>{
+        const {data,error}=await supabase.auth.signUp({
+            email:email,
+            password: password,
+        });
+        if(error){
+            console.error("Error registering user:", error);
+            return{success: false, error};
         }
-    };
-
-    return (
-        <AuthContext.Provider value={{ login, register }}>
-            {children}
+        return {success: true, data};
+    }
+     useEffect(()=>{
+        supabase.auth.getSession().then(({data:{session}})=>{
+            setSession(session);
+        });
+        supabase.auth.onAuthStateChange((_event,session)=>{
+            setSession(session);
+        })
+     } )
+    return(
+        <AuthContext.Provider value={{session,Register,SignIn}}>
+        {children}
         </AuthContext.Provider>
-    );
-};
+    )
+}
+export const useAuthContext = () =>{
+    return useContext(AuthContext);
+}
