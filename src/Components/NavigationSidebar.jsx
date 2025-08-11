@@ -85,6 +85,7 @@ const SidebarContent = ({ showLabels }) => {
               href=""
               icon={HiOutlineLogout}
               className="hover:bg-violet-400 "
+              
             >
               {showLabels && "Logout"}
             </SidebarItem>
