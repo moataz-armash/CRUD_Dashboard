@@ -9,7 +9,10 @@ import { supabase } from "../Components/Supabase/Supabase";
 
 const AuthContext = createContext();
 export const AuthContextProvider = ({ children }) => {
-  const [session, setSession] = useState(undefined);
+  const [session, setSession] = useState(() => {
+    const saved = localStorage.getItem("session");
+    return saved ? JSON.parse(saved) : null;
+  });
 
   const SignIn = async (email, password) => {
     try {
@@ -40,16 +43,24 @@ export const AuthContextProvider = ({ children }) => {
     return { success: true, data };
   };
   useEffect(() => {
-    const current = supabase.auth
-      .getSession()
-      .then(({ data }) => setSession(data.session));
-    const { data: sub } = supabase.auth.onAuthStateChange((_event, sess) =>
-      setSession(sess)
-    );
+    const current = supabase.auth.getSession().then(({ data }) => {
+      setSession(data.session);
+      localStorage.setItem("session", JSON.stringify(data.session));
+    });
+    const { data: sub } = supabase.auth.onAuthStateChange((_event, sess) => {
+      setSession(sess);
+      if (sess) {
+        localStorage.setItem("session", JSON.stringify(sess));
+      } else {
+        localStorage.removeItem("session");
+      }
+    });
     return () => sub.subscription.unsubscribe();
   }, []);
   const Logout = async () => {
     await supabase.auth.signOut();
+    localStorage.removeItem("session");
+    setSession(null);
   };
   return (
     <AuthContext.Provider value={{ session, Register, SignIn, Logout }}>
