@@ -1,6 +1,13 @@
-import axios from "axios";
-import { createContext, useCallback, useEffect, useMemo, useState } from "react";
+// src/Context/UserContextProvider.jsx
+import {
+  createContext,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import { useSearchParams } from "react-router-dom";
+import { api } from "../lib/api";
 
 export const userContext = createContext();
 
@@ -11,57 +18,34 @@ export const UserContextProvider = ({ children }) => {
   const [error, setError] = useState(null);
   const pageSize = 10;
 
-  // get filter type from url in home page for customer & admin
-  const [searchParams]= useSearchParams();
-  const filterType = searchParams.get('filter')
+  // filter from URL
+  const [searchParams] = useSearchParams();
+  const filterType = searchParams.get("filter");
 
-  const apikey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNwdnNpYWFib3luY3BjeWZhaGttIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQyNTYzOTgsImV4cCI6MjA2OTgzMjM5OH0.96oz-V_0CVvYaNq9TgPVV3rfmkrvNSB_6WQ2KyUAnWA";
-
-  const headers = {
-    "Content-Type": "application/json",
-    "apikey": apikey,
-    "Authorization": `Bearer ${apikey}`,
-    "Prefer": "return=representation"
-  };
-
-  // جلب المستخدمين مع دعم localStorage
+  // ===== READ (with simple cache) =====
   const fetchUsers = useCallback(async () => {
     try {
       setIsLoading(true);
       setError(null);
-      
-      // التحقق من وجود بيانات في localStorage
-      const cachedUsers = localStorage.getItem('cachedUsers');
-      const lastFetchTime = localStorage.getItem('lastFetchTime');
-      
-      // إذا كانت البيانات موجودة ولم تنته صلاحيتها (مثال: 5 دقائق)
-      if (cachedUsers && lastFetchTime && (Date.now() - parseInt(lastFetchTime)) < 300000) {
-        setUsers(JSON.parse(cachedUsers));
-        setIsLoading(false);
+
+      const cached = localStorage.getItem("cachedUsers");
+      const last = localStorage.getItem("lastFetchTime");
+      if (cached && last && Date.now() - +last < 300000) {
+        setUsers(JSON.parse(cached));
         return;
       }
-      
-      // جلب البيانات من الخادم
-      const res = await axios.get(
-        "https://cpvsiaaboyncpcyfahkm.supabase.co/rest/v1/users",
-        { headers }
-      );
-      
-      const formattedUsers = res.data.map(user => ({ ...user, id: user.user_id || user.id }));
-      setUsers(formattedUsers);
-      
-      // حفظ البيانات في localStorage
-      localStorage.setItem('cachedUsers', JSON.stringify(formattedUsers));
-      localStorage.setItem('lastFetchTime', Date.now().toString());
-      
+
+      const res = await api.get("/users");
+      const formatted = res.data.map((u) => ({ ...u, id: u.user_id || u.id }));
+      setUsers(formatted);
+      localStorage.setItem("cachedUsers", JSON.stringify(formatted));
+      localStorage.setItem("lastFetchTime", Date.now().toString());
     } catch (err) {
       console.error("Error fetching users:", err.response?.data || err.message);
       setError("Failed to fetch users");
-      
-      // محاولة استخدام البيانات المخزنة محليًا في حالة فشل الاتصال
-      const cachedUsers = localStorage.getItem('cachedUsers');
-      if (cachedUsers) {
-        setUsers(JSON.parse(cachedUsers));
+      const cached = localStorage.getItem("cachedUsers");
+      if (cached) {
+        setUsers(JSON.parse(cached));
         setError("Using cached data - connection issue");
       }
     } finally {
@@ -73,160 +57,159 @@ export const UserContextProvider = ({ children }) => {
     fetchUsers();
   }, [fetchUsers]);
 
+  // ===== CREATE =====
 
-   
-  // filtering users
+  const addUser = async (userData) => {
+    try {
+      setIsLoading(true);
+
+      // 🔍 DEBUG LOG 1 – Incoming data
+      console.log("[ADD USER] Incoming userData:", userData);
+
+      const { id, user_id, ...payload } = userData;
+
+      // 🔍 DEBUG LOG 2 – Payload after stripping id/user_id
+      console.log("[ADD USER] Payload being sent to Supabase:", payload);
+
+      const res = await api.post("/users", payload);
+
+      // 🔍 DEBUG LOG 3 – Response from Supabase
+      console.log("[ADD USER] Response from Supabase:", res.status, res.data);
+
+      const newUser = res.data[0];
+      setUsers((prev) => {
+        const updated = [
+          ...prev,
+          { ...newUser, id: newUser.user_id || newUser.id },
+        ];
+        localStorage.setItem("cachedUsers", JSON.stringify(updated));
+        localStorage.setItem("lastFetchTime", Date.now().toString());
+        return updated;
+      });
+      return { success: true };
+    } catch (err) {
+      // 🔍 DEBUG LOG 4 – Error details
+      console.error(
+        "[ADD USER] Error:",
+        err.response?.status,
+        err.response?.data || err.message
+      );
+
+      return {
+        success: false,
+        error: err.response?.data?.message || "Failed to add user",
+      };
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // ===== UPDATE =====
+  const updateUser = async (userData) => {
+    try {
+      setIsLoading(true);
+      const userId = userData.id || userData.user_id;
+      if (!userId) throw new Error("User ID is missing for update");
+
+      const { id, ...payload } = userData;
+      // filter by primary key user_id (uuid)
+      const res = await api.patch(`/users?user_id=eq.${userId}`, {
+        ...payload,
+        user_id: userId,
+      });
+      const updatedRow = res.data[0];
+
+      setUsers((prev) => {
+        const updated = prev.map((u) =>
+          (u.id || u.user_id) === userId
+            ? { ...u, ...updatedRow, id: userId }
+            : u
+        );
+        localStorage.setItem("cachedUsers", JSON.stringify(updated));
+        localStorage.setItem("lastFetchTime", Date.now().toString());
+        return updated;
+      });
+      return { success: true };
+    } catch (err) {
+      console.error("Error updating user:", err.response?.data || err.message);
+      return {
+        success: false,
+        error: err.response?.data?.message || "Failed to update user",
+      };
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // ===== DELETE =====
+  const deleteUser = async (userIdLike) => {
+    try {
+      setIsLoading(true);
+      const userId = userIdLike?.id || userIdLike?.user_id || userIdLike;
+      if (!userId) throw new Error("User ID is missing for delete");
+
+      await api.delete(`/users?user_id=eq.${userId}`);
+      setUsers((prev) => {
+        const updated = prev.filter((u) => (u.id || u.user_id) !== userId);
+        localStorage.setItem("cachedUsers", JSON.stringify(updated));
+        localStorage.setItem("lastFetchTime", Date.now().toString());
+        return updated;
+      });
+      return { success: true };
+    } catch (err) {
+      console.error("Error deleting user:", err.response?.data || err.message);
+      return {
+        success: false,
+        error: err.response?.data?.message || "Failed to delete user",
+      };
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // ===== filtering + pagination + counts =====
   const filteredUsers = useMemo(() => {
     if (!filterType) return users;
     const ft = filterType.toLowerCase();
-    if (ft === "customer") {
-      return users.filter(u => u.role?.toLowerCase().includes("customer"));
-    }
-    if (ft === "admin") {
-      return users.filter(u => u.role?.toLowerCase().includes("admin"));
-    }
+    if (ft === "customer")
+      return users.filter((u) => u.role?.toLowerCase().includes("customer"));
+    if (ft === "admin")
+      return users.filter((u) => u.role?.toLowerCase().includes("admin"));
     return users;
   }, [filterType, users]);
 
-  // 2) compute total pages according to filteredUsers
-  const totalPages = useMemo(() => {
-    return Math.max(1, Math.ceil(filteredUsers.length / pageSize));
-  }, [filteredUsers.length, pageSize]);
+  const totalPages = useMemo(
+    () => Math.max(1, Math.ceil(filteredUsers.length / pageSize)),
+    [filteredUsers.length, pageSize]
+  );
 
-  //  reset current page when filter or users change
   useEffect(() => {
     setCurrentPage(1);
   }, [filterType, users.length]);
 
-  // ensure currentPage never exceeds totalPages 
   useEffect(() => {
     if (currentPage > totalPages) setCurrentPage(totalPages);
   }, [currentPage, totalPages]);
 
-  //  slice (pagination) على filteredUsers
   const startIndex = (currentPage - 1) * pageSize;
-  const currentUsers = useMemo(() => {
-    return filteredUsers.slice(startIndex, startIndex + pageSize);
-  }, [filteredUsers, startIndex, pageSize]);
+  const currentUsers = useMemo(
+    () => filteredUsers.slice(startIndex, startIndex + pageSize),
+    [filteredUsers, startIndex, pageSize]
+  );
 
-// compute number of customers and admins
-const customersCount = useMemo(() => {
-  return users.filter((user) => user.role?.toLowerCase().includes("customer")).length;
-}, [users]);
-
-const adminsCount = useMemo(() => {
-  return users.filter((user) => user.role?.toLowerCase().includes("admin")).length;
-}, [users]);
-
-
-
-
-  // إضافة مستخدم جديد مع تحديث localStorage
-  const addUser = async (userData) => {
-    try {
-      setIsLoading(true);
-      const res = await axios.post(
-        "https://cpvsiaaboyncpcyfahkm.supabase.co/rest/v1/users",
-        userData,
-        { headers }
-      );
-      
-      const newUser = res.data[0];
-      setUsers(prev => {
-        const updatedUsers = [...prev, newUser];
-        localStorage.setItem('cachedUsers', JSON.stringify(updatedUsers));
-        localStorage.setItem('lastFetchTime', Date.now().toString());
-        return updatedUsers;
-      });
-      
-      return { success: true };
-    } catch (err) {
-      console.error("Error adding user:", err.response?.data || err.message);
-      return { success: false, error: err.response?.data?.message || "Failed to add user" };
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // تحديث مستخدم مع تحديث localStorage
-  const updateUser = async (userData) => {
-    try {
-      setIsLoading(true);
-      const userIdToUse = userData.id || userData.user_id;
-      if (!userIdToUse) {
-        throw new Error("User ID is missing for update operation.");
-      }
-      
-      const dataToSend = { ...userData };
-      if (userData.user_id) {
-        dataToSend.user_id = userData.user_id;
-        delete dataToSend.id;
-      } else if (userData.id) {
-        dataToSend.user_id = userData.id;
-        delete dataToSend.id;
-      }
-
-      const res = await axios.patch(
-        `https://cpvsiaaboyncpcyfahkm.supabase.co/rest/v1/users?user_id=eq.${userIdToUse}`,
-        dataToSend,
-        { headers }
-      );
-      
-      setUsers(prev => {
-        const updatedUsers = prev.map(user => 
-          (user.id || user.user_id) === userIdToUse ? { ...user, ...userData, id: userIdToUse } : user
-        );
-        localStorage.setItem('cachedUsers', JSON.stringify(updatedUsers));
-        localStorage.setItem('lastFetchTime', Date.now().toString());
-        return updatedUsers;
-      });
-      
-      return { success: true };
-    } catch (err) {
-      console.error("Error updating user:", err.response?.data || err.message);
-      return { success: false, error: err.response?.data?.message || "Failed to update user" };
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // حذف مستخدم مع تحديث localStorage
-  const deleteUser = async (userId) => {
-    try {
-      setIsLoading(true);
-      const userIdToUse = userId.id || userId.user_id || userId;
-      if (!userIdToUse) {
-        throw new Error("User ID is missing for delete operation.");
-      }
-      
-      await axios.delete(
-        `https://cpvsiaaboyncpcyfahkm.supabase.co/rest/v1/users?user_id=eq.${userIdToUse}`,
-        { headers }
-      );
-      
-      setUsers(prev => {
-        const updatedUsers = prev.filter(user => (user.id || user.user_id) !== userIdToUse);
-        localStorage.setItem('cachedUsers', JSON.stringify(updatedUsers));
-        localStorage.setItem('lastFetchTime', Date.now().toString());
-        return updatedUsers;
-      });
-        // تحديث القائمة من السيرفر مباشرة لتجنب أي بيانات قديمة
-    await fetchUsers();
-      
-      return { success: true };
-    } catch (err) {
-      console.error("Error deleting user:", err.response?.data || err.message);
-      return { success: false, error: err.response?.data?.message || "Failed to delete user" };
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  
+  const customersCount = useMemo(
+    () =>
+      users.filter((u) => u.role?.toLowerCase().includes("customer")).length,
+    [users]
+  );
+  const adminsCount = useMemo(
+    () => users.filter((u) => u.role?.toLowerCase().includes("admin")).length,
+    [users]
+  );
 
   return (
-    <userContext.Provider 
-      value={{ 
+    <userContext.Provider
+      value={{
         isLoading,
         error,
         currentPage,
@@ -240,9 +223,8 @@ const adminsCount = useMemo(() => {
         fetchUsers,
         filteredUsers,
         customersCount,
-        adminsCount
-      }}
-    >
+        adminsCount,
+      }}>
       {children}
     </userContext.Provider>
   );
