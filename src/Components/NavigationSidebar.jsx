@@ -39,7 +39,7 @@ const SidebarContent = ({ showLabels }) => {
         transition-all duration-300`}>
       {/* العنوان يظهر فقط في الشاشات الكبيرة */}
       {showLabels && (
-        <h1 className="my-5 font-bold text-xl whitespace-nowrap">
+        <h1 className="my-5 font-bold text-xl whitespace-nowrap text-white">
           CRUD DASHBOARD
         </h1>
       )}

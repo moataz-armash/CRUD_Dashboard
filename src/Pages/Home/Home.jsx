@@ -46,7 +46,7 @@ const Home = () => {
             <Card
               key={card.name}
               onClick={card.onClick}
-              className="w-3xs h-40 rounded-md cursor-pointer bg-gray-100  border-2 border-violet-700 shadow-gray-500 hover:scale-105 transition-all">
+              className="w-3xs h-40 rounded-md cursor-pointer bg-gray-100 text-white border-2 border-violet-700 shadow-gray-500 hover:scale-105 transition-all">
               <card.icon className="text-4xl" />
               <p className="font-normal ">{card.name}</p>
               <span className="text-end font-bold text-[20px]">
