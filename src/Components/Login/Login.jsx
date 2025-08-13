@@ -9,7 +9,7 @@ const Login = () => {
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState("");
 
-  const { SignIn } = useAuthContext(); // from the context we wrote earlier
+  const { SignIn } = useAuthContext(); 
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
@@ -17,10 +17,10 @@ const Login = () => {
     setErr("");
     setLoading(true);
     try {
-      const res = await SignIn(email, password); // calls supabase.auth.signInWithPassword
+      const res = await SignIn(email, password); 
       if (res.success) {
         toast.success("Signed in successfully");
-        navigate("/"); // or wherever
+        navigate("/"); 
       } else {
         const msg = res.error?.message || "Invalid credentials";
         toast.error(msg);
